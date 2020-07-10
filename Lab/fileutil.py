@@ -1,6 +1,10 @@
+import json
+from flask import jsonify
 import boto3
+import base64
 import os
 import urllib3
+import pymysql
 from werkzeug.utils import secure_filename
 
 http = urllib3.PoolManager()
@@ -55,3 +59,62 @@ def list_s3(bucket):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+
+# Database functions
+def get_files():
+    files = []
+    db = pymysql.connect('localhost', 'selfies_admin', 'Strongpass1', 'johnselfie')
+    cursor = db.cursor()
+    sql = 'SELECT file_name, file_data FROM selfies'
+    
+    try:
+        cursor.execute(sql)
+
+        selfies = cursor.fetchall()
+        for selfie in selfies:
+            file_data = selfie[1].decode('ascii')
+            files.append({'file_name': selfie[0], 'file_data': file_data})
+        result = json.dumps(files)
+    
+    except Exception as e:
+        result = "Exception"
+        print(f'Encounter Exception: {e}')
+    
+    db.close
+    return result
+
+def add_file(file):
+    bucket = open('bucket', 'r').read()
+    db =  pymysql.connect('localhost', 'selfies_admin', 'Strongpass1', 'johnselfie')
+    cursor = db.cursor()
+
+    cursor.execute('SELECT file_name FROM selfies')
+    existing_files = cursor.fetchall()
+
+    cursor.execute('show columns from selfies like "file_data"')
+    file_data_info = cursor.fetchone()
+    column_type = file_data_info[1]
+
+    if column_type == 'mediumblob':
+        file_to_add = {'file_name': file.filename, 'file_data': base64.b64encode(file.read())}
+    else:
+        file_to_add = {'file_name': file.filename, 'file_data': f"https://{bucket}.s3-us-west-2.amazonaws.com/media/{file.filename}"}
+
+    if file_to_add['file_name'] not in existing_files:
+        sql = 'INSERT INTO selfies(file_name, file_data) VALUES (%s, %s)'
+        sql_data = (file_to_add["file_name"], file_to_add["file_data"])
+
+        try:
+            cursor.execute(sql, sql_data)
+            db.commit()
+        
+        except Exception as e:
+            db.rollback()
+            print(f'Encounter Exception: {e}')
+            return "Exception"
+    else:
+        return "File already exists"
+    
+    db.close()
+    return

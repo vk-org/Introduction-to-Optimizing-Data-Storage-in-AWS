@@ -1,9 +1,9 @@
 import json
 import urllib3
-from flask import Flask, request, redirect, send_from_directory
+from flask import Flask, request, redirect, send_from_directory, jsonify
 from werkzeug.utils import secure_filename
 from flask_cors import CORS
-from fileutil import save_local, upload_s3, list_local, list_s3, allowed_file
+from fileutil import save_local, upload_s3, list_local, list_s3, add_file, get_files, allowed_file
 
 upload_folder = 'media'
 
@@ -34,8 +34,9 @@ def upload_file():
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
 # MAKE CHANGES HERE!
+            add_file(file)
             #save_local(file)
-            upload_s3(file, "john-selfie")
+            #upload_s3(file, "john-selfie")
 # ------------------
             return f'Received {filename}'
     return
@@ -43,10 +44,11 @@ def upload_file():
 @app.route('/listmedia')
 def list_media():
 # MAKE CHANGES HERE!
+    media_files = get_files()
     #media_files = list_local()
-    media_files = list_s3('john-selfie')
+    #media_files = list_s3('john-selfie')
 # ------------------
-    return json.dumps(media_files)
+    return media_files
 
 @app.route('/media/<filename>')
 def uploaded_file(filename):
