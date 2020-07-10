@@ -8,7 +8,7 @@ var ViewModel = function () {
     $.getJSON(self.url+'listmedia', function (data) {
       self.existingImages.removeAll();
       for (i = 0; i < data.length; i++) {
-        if (data[i].file_data.substring(0,5) != "http") {
+        if (data[i].file_data.substring(0,5) != "https") {
           data[i].file_data = 'data:image/jpg;base64,' + data[i].file_data; 
         } 
         self.existingImages.push(data[i]);

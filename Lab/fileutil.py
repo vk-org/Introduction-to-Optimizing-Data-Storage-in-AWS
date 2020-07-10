@@ -73,12 +73,15 @@ def get_files():
 
         selfies = cursor.fetchall()
         for selfie in selfies:
-            file_data = selfie[1].decode('ascii')
+            if selfie[1][:5] != "https":
+                file_data = selfie[1].decode('ascii')
+            else:
+                file_data = selfie[1]
             files.append({'file_name': selfie[0], 'file_data': file_data})
         result = json.dumps(files)
     
     except Exception as e:
-        result = "Exception"
+        result = [{"file_name": "Oh No!", "file_data": ""}]
         print(f'Encounter Exception: {e}')
     
     db.close
@@ -86,6 +89,7 @@ def get_files():
 
 def add_file(file):
     bucket = open('bucket', 'r').read()
+    region = http.request('GET', '169.254.169.254/latest/meta-data/placement//availability-zone').data.decode()[:-1]
     db =  pymysql.connect('localhost', 'selfies_admin', 'Strongpass1', 'johnselfie')
     cursor = db.cursor()
 
@@ -99,7 +103,8 @@ def add_file(file):
     if column_type == 'mediumblob':
         file_to_add = {'file_name': file.filename, 'file_data': base64.b64encode(file.read())}
     else:
-        file_to_add = {'file_name': file.filename, 'file_data': f"https://{bucket}.s3-us-west-2.amazonaws.com/media/{file.filename}"}
+        file_to_add = {'file_name': file.filename, 'file_data': f"https://{bucket}.s3-{region}.amazonaws.com/media/{file.filename}"}
+        upload_s3(file, bucket)
 
     if file_to_add['file_name'] not in existing_files:
         sql = 'INSERT INTO selfies(file_name, file_data) VALUES (%s, %s)'
