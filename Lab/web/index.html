@@ -24,11 +24,12 @@
     </nav>
     <div class="container overflow-auto imagebox">
         <ul class="list-group">
-            <!-- ko foreach: existingImages -->
-                <li class="list-group-item text-center">
-                    <img class="img-thumbnail" data-bind = "attr: {'src': $data}"/>
-                </li>
-            <!-- /ko -->
+        <!-- ko foreach: existingImages -->
+            <li class="list-group-item text-center">
+                <img class="img-thumbnail" data-bind = "attr: {'src':$data.file_data}"/>
+                <h3 data-bind = "text: $data.file_name"></h3>
+            </li>
+        <!-- /ko -->
         </ul>
     </div>
     <div class="container uploadbox">
