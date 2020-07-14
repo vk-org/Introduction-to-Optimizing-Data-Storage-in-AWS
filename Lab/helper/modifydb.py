@@ -2,9 +2,7 @@ import pymysql
 import urllib3
 import boto3
 
-bucket = open('../bucket', 'r').read()
-http = urllib3.PoolManager()
-region = http.request('GET', '169.254.169.254/latest/meta-data/placement//availability-zone').data.decode()[:-1]
+bucket = open('../bucket', 'r').read().rstrip('\n')
 
 db =  pymysql.connect('localhost', 'selfies_admin', 'Strongpass1', 'johnselfie')
 cursor = db.cursor()
@@ -27,7 +25,7 @@ cursor.execute(get_files)
 files = cursor.fetchall()
 
 for file in files:
-    update = f"UPDATE selfies SET file_data = 'https://{bucket}.s3-{region}.amazonaws.com/media/{file[1]}' WHERE id = {file[0]}"
+    update = f"UPDATE selfies SET file_data = 'https://{bucket}.s3.amazonaws.com/media/{file[1]}' WHERE id = {file[0]}"
     print(f"Updating id: {file[0]} file: {file[1]} with  {update}...")
     cursor.execute(update)
     print("...done")
