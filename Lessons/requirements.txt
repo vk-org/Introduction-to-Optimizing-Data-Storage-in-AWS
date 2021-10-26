@@ -1,5 +1,5 @@
 boto3==1.14.9
 Flask==1.1.2
 Flask-Cors==3.0.8
-urllib3==1.25.9
+urllib3==1.26.5
 Werkzeug==1.0.1
